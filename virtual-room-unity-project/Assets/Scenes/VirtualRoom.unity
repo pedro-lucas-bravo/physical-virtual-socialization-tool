@@ -123,6 +123,36 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &283014031
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 283014032}
+  m_Layer: 0
+  m_Name: VirtualPeople
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &283014032
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 283014031}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -225,7 +255,7 @@ GameObject:
   m_Component:
   - component: {fileID: 720819712}
   m_Layer: 0
-  m_Name: PhysicalPerson
+  m_Name: PhysicalPeople
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1012,6 +1042,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ip: 192.168.1.101
   port: 5000
+  virtualPersonPrefab: {fileID: 2148962201780383132, guid: 7f0c86c7f8ea8964fa05bca1f2b6a938, type: 3}
+  virtualPersonParent: {fileID: 283014032}
+  periodForCheckingVirtuals: 1
 --- !u!4 &2063010207
 Transform:
   m_ObjectHideFlags: 0

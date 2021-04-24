@@ -7,6 +7,10 @@ public class MainUser : MonoBehaviour
     public float speed;
     public float boostSpeed;
 
+    void Start() {
+        position_Request = new WrapperWebRequest("SetVirtualPosition", MainController.Instance.Url() + "/set_virtual_position/" + SystemInfo.deviceUniqueIdentifier, "GET");
+    }
+
     void Update()
     {
         //Mouse Interaction
@@ -34,6 +38,9 @@ public class MainUser : MonoBehaviour
             var modifySpeed = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             transform.position += (!modifySpeed ? speed : boostSpeed) * Time.deltaTime * new Vector3(hAxis, vAxis, 0);
         }
+
+        if (!sending_)
+            StartCoroutine(SendPositionThroughNetwork());
     }
 
     Vector3 getPosition() {
@@ -42,5 +49,19 @@ public class MainUser : MonoBehaviour
        return Camera.main.ScreenToWorldPoint(mousePos);
     }
 
+    public IEnumerator SendPositionThroughNetwork() {
+        sending_ = true;
+        position_Request.SetRequestHeader("p_x", transform.position.x + "");
+        position_Request.SetRequestHeader("p_y", transform.position.y + "");
+        position_Request.SetRequestHeader("p_z", transform.position.z + "");
+        position_Request.SendAsync();
+        while (position_Request.Requesting) {
+            yield return null;
+        }
+        sending_ = false;
+    }
+
     bool grabbed_;
+    bool sending_;
+    WrapperWebRequest position_Request;
 }
