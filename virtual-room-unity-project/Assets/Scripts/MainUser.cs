@@ -10,16 +10,23 @@ public class MainUser : MonoBehaviour
 
     void Start() {
         MainController.Instance.OnConnect += OnConnect;
+        MainController.Instance.OnChangeUser += OnChangeUser;
         OnConnect();
     }
 
     private void OnDestroy() {
-        if(MainController.Instance != null)
+        if (MainController.Instance != null) {
             MainController.Instance.OnConnect -= OnConnect;
+            MainController.Instance.OnChangeUser -= OnChangeUser;
+        }
     }
 
     private void OnConnect() {
-        position_Request = new WrapperWebRequest("SetVirtualPosition", MainController.Instance.Url() + "/set_virtual_position/" + SystemInfo.deviceUniqueIdentifier, "GET");
+        position_Request = new WrapperWebRequest("SetVirtualPosition", MainController.Instance.Url() + "/set_virtual_position/" + SystemInfo.deviceUniqueIdentifier +"/"+ MainController.Instance.user, "GET");
+    }
+
+    private void OnChangeUser() {
+        OnConnect();
     }
 
     void Update()

@@ -5,6 +5,7 @@ using UnityEngine;
 public class VirtualPerson : MonoBehaviour {
 
     public float smoothDamp = 0.03f;
+    public TextMesh label;
     public string Id { get; set; }
 
     PositionRequest positionRequest_;

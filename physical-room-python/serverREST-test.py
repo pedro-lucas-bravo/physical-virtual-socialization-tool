@@ -19,14 +19,13 @@ def get_physical_person_position(rb_id=0):
     else:
         return 'none'
         
-@api.route('/set_virtual_position/<v_id>', methods=['GET'])
-def set_virtual_person_position(v_id):
+@api.route('/set_virtual_position/<v_id>/<user_name>', methods=['GET'])
+def set_virtual_person_position(v_id, user_name):
     global dic_virtual_people    
     p_x = request.headers.get('p_x')
     p_y = request.headers.get('p_y')
     p_z = request.headers.get('p_z')
-    dic_virtual_people[v_id] = [p_x + "," + p_y + "," + p_z, time.time()]
-    print(json.dumps(dic_virtual_people))
+    dic_virtual_people[v_id] = [p_x + "," + p_y + "," + p_z, user_name, time.time()]
     return 'ok'
     
 @api.route('/get_virtual_position/<v_id>', methods=['GET'])
@@ -45,15 +44,18 @@ def get_all_virtual_people(v_id):
         ids.remove(v_id)
     #Remove if person is not sending for some seconds (2 sec)
     for k, v in dic_virtual_people.items():
-        if time.time() - v[1] > 2.0:
+        if time.time() - v[2] > 2.0:
             ids.remove(k)
+    #Add user 
+    for i in range(len(ids)):
+        ids[i] += '-' + dic_virtual_people[ids[i]][1]
     return ','.join(ids)
 
 
 ########################## OTHER FUNCTIONS ##########################
 def flaskThread():
-    #api.run(host="192.168.1.101", port=5000)
-    api.run(host="193.157.137.60", port=5000)
+    api.run(host="192.168.1.101", port=5000)
+    #api.run(host="193.157.137.60", port=5000)
 
 
 
