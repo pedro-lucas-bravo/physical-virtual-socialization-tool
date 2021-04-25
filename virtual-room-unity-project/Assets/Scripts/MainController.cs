@@ -26,6 +26,11 @@ public class MainController : MonoBehaviour
     public void Awake() {
         Instance = this;
         virtual_people_ = new List<VirtualPerson>();
+        var ipFromPrefs = PlayerPrefs.GetString("ip");
+        if (!string.IsNullOrEmpty(ipFromPrefs))
+            ip = ipFromPrefs;
+        else
+            PlayerPrefs.SetString("ip", ip);
         ipInput.text = ip;
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
     }
@@ -97,6 +102,7 @@ public class MainController : MonoBehaviour
 
     public void Connect() {
         ip = ipInput.text.Trim();
+        PlayerPrefs.SetString("ip", ip);
         SetWebRequests();
         if (OnConnect != null)
             OnConnect();
