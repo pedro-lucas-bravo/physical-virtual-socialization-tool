@@ -52,7 +52,9 @@ def get_all_virtual_people(v_id):
 
 ########################## OTHER FUNCTIONS ##########################
 def flaskThread():
-    api.run(host="192.168.1.101", port=5000)
+    #api.run(host="192.168.1.101", port=5000)
+    api.run(host="193.157.137.60", port=5000)
+
 
 
 ########################## MAIN ##########################

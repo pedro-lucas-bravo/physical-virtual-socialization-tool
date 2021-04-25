@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,7 +8,20 @@ public class PositionRequest
     public PositionRequest(string requestName, string apiFunctionName, string id, MonoBehaviour handler, float smoothDamp) {
         handler_ = handler;
         smoothDamp_ = smoothDamp;
-        position_Request = new WrapperWebRequest(requestName, MainController.Instance.Url() + "/"+ apiFunctionName + "/" + id, "GET");
+        requestName_ = requestName;
+        apiFunction_ = apiFunctionName;
+        id_ = id;
+        MainController.Instance.OnConnect += OnConnect;
+        OnConnect();
+    }
+
+    public void OnDestroy() {
+        if (MainController.Instance != null)
+            MainController.Instance.OnConnect -= OnConnect;
+    }
+
+    private void OnConnect() {
+        position_Request = new WrapperWebRequest(requestName_, MainController.Instance.Url() + "/" + apiFunction_ + "/" + id_, "GET");
     }
 
     public void Update() {
@@ -26,6 +40,7 @@ public class PositionRequest
         }
         switch (position_Request.ErrorStatus) {
             case WrapperWebRequest.ErroType.None:
+                if (position_Request.ResponseText == null) break;
                 currentPosition_ = MainController.ParsePosition(position_Request.ResponseText);
                 break;
             default:
@@ -39,4 +54,8 @@ public class PositionRequest
     Vector3 currentPosition_;
     MonoBehaviour handler_;
     float smoothDamp_;
+
+    string requestName_;
+    string apiFunction_;
+    string id_;
 }

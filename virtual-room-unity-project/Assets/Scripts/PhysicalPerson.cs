@@ -12,7 +12,11 @@ public class PhysicalPerson : MonoBehaviour
     void Start() {
         positionRequest_ = new PositionRequest("GetPosition", "position", id + "", this, smoothDamp);
     }
-    
+
+    private void OnDestroy() {
+        positionRequest_.OnDestroy();
+    }
+
     void Update(){
         positionRequest_.Update();
     }

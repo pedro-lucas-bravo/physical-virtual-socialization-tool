@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,6 +9,16 @@ public class MainUser : MonoBehaviour
     public float boostSpeed;
 
     void Start() {
+        MainController.Instance.OnConnect += OnConnect;
+        OnConnect();
+    }
+
+    private void OnDestroy() {
+        if(MainController.Instance != null)
+            MainController.Instance.OnConnect -= OnConnect;
+    }
+
+    private void OnConnect() {
         position_Request = new WrapperWebRequest("SetVirtualPosition", MainController.Instance.Url() + "/set_virtual_position/" + SystemInfo.deviceUniqueIdentifier, "GET");
     }
 

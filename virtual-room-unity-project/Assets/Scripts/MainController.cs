@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MainController : MonoBehaviour
 {
@@ -14,15 +16,26 @@ public class MainController : MonoBehaviour
     public Transform virtualPersonParent;
     public float periodForCheckingVirtuals = 1;
 
+    [Header("UI")]
+    public InputField ipInput;
+
+    public Action OnConnect { get; set; }
+
     public static MainController Instance;
 
     public void Awake() {
         Instance = this;
         virtual_people_ = new List<VirtualPerson>();
+        ipInput.text = ip;
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
     }
 
     private void Start() {
-        all_virtual_Request = new WrapperWebRequest("GetAllVirtualPeople", MainController.Instance.Url() + "/get_all_virtual/"+SystemInfo.deviceUniqueIdentifier, "GET");
+        SetWebRequests();        
+    }
+
+    void SetWebRequests() {
+        all_virtual_Request = new WrapperWebRequest("GetAllVirtualPeople", MainController.Instance.Url() + "/get_all_virtual/" + SystemInfo.deviceUniqueIdentifier, "GET");
     }
 
     private void Update() {
@@ -45,6 +58,8 @@ public class MainController : MonoBehaviour
         }
         switch (all_virtual_Request.ErrorStatus) {
             case WrapperWebRequest.ErroType.None:
+                if (all_virtual_Request.ResponseText == null) break;
+
                 var people = all_virtual_Request.ResponseText.Split(',');
 
                 //Remove and destroyif needed
@@ -77,6 +92,17 @@ public class MainController : MonoBehaviour
         }
         requesting_ = false;
     }
+
+    #region Events
+
+    public void Connect() {
+        ip = ipInput.text.Trim();
+        SetWebRequests();
+        if (OnConnect != null)
+            OnConnect();
+    }
+
+    #endregion
 
     float timer_;
     bool requesting_;

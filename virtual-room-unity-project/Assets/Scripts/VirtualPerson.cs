@@ -13,6 +13,9 @@ public class VirtualPerson : MonoBehaviour {
         positionRequest_ = new PositionRequest("GetVirtualPosition", "get_virtual_position", Id + "", this, smoothDamp);
     }
 
+    private void OnDestroy() {
+        positionRequest_.OnDestroy();
+    }
     void Update() {
         positionRequest_.Update();
     }
