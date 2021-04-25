@@ -14,6 +14,10 @@ public class MainUser : MonoBehaviour
         OnConnect();
     }
 
+    private void OnEnable() {
+        sending_ = false;
+    }
+
     private void OnDestroy() {
         if (MainController.Instance != null) {
             MainController.Instance.OnConnect -= OnConnect;

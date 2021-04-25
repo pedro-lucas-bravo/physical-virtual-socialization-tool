@@ -44,7 +44,7 @@ def get_all_virtual_people(v_id):
         ids.remove(v_id)
     #Remove if person is not sending for some seconds (2 sec)
     for k, v in dic_virtual_people.items():
-        if time.time() - v[2] > 2.0:
+        if time.time() - v[2] > 2.0 and k in ids:
             ids.remove(k)
     #Add user 
     for i in range(len(ids)):

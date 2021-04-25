@@ -7,6 +7,7 @@ using UnityEngine.UI;
 
 public class MainController : MonoBehaviour
 {
+    public enum UserType { Virtual, Physical1, Physical2 }
     public struct NetworkVitualPerson {
         public string Id;
         public string UserName;
@@ -25,14 +26,17 @@ public class MainController : MonoBehaviour
     public VirtualPerson virtualPersonPrefab;
     public Transform virtualPersonParent;
     public float periodForCheckingVirtuals = 1;
+    public GameObject mainUser;
 
     [Header("UI")]
     public InputField ipInput;
     public InputField userInput;
     public TextMesh userLabel;
+    public Dropdown userTypeDropdown;
 
     public Action OnConnect { get; set; }
     public Action OnChangeUser { get; set; }
+    public UserType MainUserType { get; private set; }
 
     public static MainController Instance;
 
@@ -57,6 +61,15 @@ public class MainController : MonoBehaviour
         else
             PlayerPrefs.SetString("user", user);
         userInput.text = userLabel.text = user;
+
+        //Type info
+        var userTypeFromPrefs = PlayerPrefs.GetInt("user_type");
+        if (userTypeFromPrefs >= 0)
+            MainUserType = (UserType)userTypeFromPrefs;
+        else
+            PlayerPrefs.SetInt("user_type", (int)MainUserType);
+        userTypeDropdown.value = (int)MainUserType;
+
     }
 
     private void Start() {
@@ -143,6 +156,11 @@ public class MainController : MonoBehaviour
             OnChangeUser();
     }
 
+    public void OnUserTypeChange(int selection) {
+        MainUserType = (UserType)selection;
+        mainUser.SetActive(selection == 0);
+        PlayerPrefs.SetInt("user_type", (int)MainUserType);
+    }
     #endregion
 
     float timer_;
