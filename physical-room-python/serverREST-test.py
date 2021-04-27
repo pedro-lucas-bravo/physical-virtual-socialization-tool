@@ -11,13 +11,27 @@ api = Flask(__name__)
 
 @api.route('/position/<rb_id>', methods=['GET'])
 def get_physical_person_position(rb_id=0):
-    global pos    
+    global pos_rb1    
+    global pos_rb2    
     if rb_id == '1':
-        return str(pos[0])+","+str(pos[1])+","+str(pos[2])
+        return str(pos_rb1[0])+","+str(pos_rb1[1])+","+str(pos_rb1[2])
     if rb_id == '2':
-        return str(pos[0] + 1)+","+str(pos[1] + 1)+","+str(pos[2])
+        return str(pos_rb2[0])+","+str(pos_rb2[1])+","+str(pos_rb2[2])
     else:
         return 'none'
+        
+@api.route('/set_physical_position/<rb_id>', methods=['GET'])
+def set_physical_person_position(rb_id=0):
+    global pos_rb1    
+    global pos_rb2
+    if rb_id == '1':
+        pos = pos_rb1
+    else:
+        pos = pos_rb2    
+    pos[0] = float(request.headers.get('p_x'))
+    pos[1] = float(request.headers.get('p_y'))
+    pos[2] = float(request.headers.get('p_z'))    
+    return 'ok'
         
 @api.route('/set_virtual_position/<v_id>/<user_name>', methods=['GET'])
 def set_virtual_person_position(v_id, user_name):
@@ -60,16 +74,17 @@ def flaskThread():
 
 
 ########################## MAIN ##########################
-pos = np.array([0.0,0.0,0.0])
+pos_rb1 = np.array([0.0,0.0,0.0])
+pos_rb2 = np.array([0.0,0.0,0.0])
 dic_virtual_people = {}
 
 if __name__ == '__main__':
      
     threading.Thread(target=flaskThread).start()
-    counter = 0
-    while True:
-        pos[0] = -3 + 0.1 * (counter%40)
-        pos[1] = -3 + 0.1 * (counter%40)
-        counter += 1
-        #print(pos)
-        time.sleep(1/60)
+    # counter = 0
+    # while True:
+        # pos[0] = -3 + 0.1 * (counter%40)
+        # pos[1] = -3 + 0.1 * (counter%40)
+        # counter += 1
+        # #print(pos)
+        # time.sleep(1/60)
