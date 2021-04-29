@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public class PositionRequest
 {
@@ -21,7 +22,7 @@ public class PositionRequest
     }
 
     private void OnConnect() {
-        position_Request = new WrapperWebRequest(requestName_, MainController.Instance.Url() + "/" + apiFunction_ + "/" + id_, "GET");
+        position_Request_uri = MainController.Instance.Url() + "/" + apiFunction_ + "/" + id_;
     }
 
     public void Update() {
@@ -34,23 +35,28 @@ public class PositionRequest
 
     IEnumerator GetPosition() {
         requesting_ = true;
-        position_Request.SendAsync();
-        while (position_Request.Requesting) {
-            yield return null;
-        }
-        switch (position_Request.ErrorStatus) {
-            case WrapperWebRequest.ErroType.None:
-                if (position_Request.ResponseText == null) break;
-                currentPosition_ = MainController.ParsePosition(position_Request.ResponseText);
-                break;
-            default:
-                break;
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(position_Request_uri)) {
+            yield return webRequest.SendWebRequest();
+            switch (webRequest.result) {
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                    Debug.LogError("Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.ProtocolError:
+                    Debug.LogError("HTTP Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.Success:
+                    var responseText = webRequest.downloadHandler.text;
+                    if (responseText == null) break;
+                    currentPosition_ = MainController.ParsePosition(responseText);
+                    break;
+            }
         }
         requesting_ = false;
     }
 
     bool requesting_;
-    WrapperWebRequest position_Request;
+    string position_Request_uri;
     Vector3 currentPosition_;
     MonoBehaviour handler_;
     float smoothDamp_;

@@ -1,4 +1,4 @@
-from flask import Flask, json, request
+from flask import Flask, json, request, make_response
 import threading
 import time
 import numpy as np
@@ -11,14 +11,17 @@ api = Flask(__name__)
 
 @api.route('/position/<rb_id>', methods=['GET'])
 def get_physical_person_position(rb_id=0):
-    global pos_rb1    
-    global pos_rb2    
+    global pos_rb1
+    global pos_rb2
     if rb_id == '1':
-        return str(pos_rb1[0])+","+str(pos_rb1[1])+","+str(pos_rb1[2])
-    if rb_id == '2':
-        return str(pos_rb2[0])+","+str(pos_rb2[1])+","+str(pos_rb2[2])
+        resp = str(pos_rb1[0])+","+str(pos_rb1[1])+","+str(pos_rb1[2])
+    elif rb_id == '2':
+        resp = str(pos_rb2[0])+","+str(pos_rb2[1])+","+str(pos_rb2[2])
     else:
-        return 'none'
+        resp = 'none_rb'
+    response = make_response(resp)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
         
 @api.route('/set_physical_position/<rb_id>', methods=['GET'])
 def set_physical_person_position(rb_id=0):
@@ -30,8 +33,11 @@ def set_physical_person_position(rb_id=0):
         pos = pos_rb2    
     pos[0] = float(request.headers.get('p_x'))
     pos[1] = float(request.headers.get('p_y'))
-    pos[2] = float(request.headers.get('p_z'))    
-    return 'ok'
+    pos[2] = float(request.headers.get('p_z'))  
+    
+    response = make_response('ok')
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
         
 @api.route('/set_virtual_position/<v_id>/<user_name>', methods=['GET'])
 def set_virtual_person_position(v_id, user_name):
@@ -40,14 +46,22 @@ def set_virtual_person_position(v_id, user_name):
     p_y = request.headers.get('p_y')
     p_z = request.headers.get('p_z')
     dic_virtual_people[v_id] = [p_x + "," + p_y + "," + p_z, user_name, time.time()]
-    return 'ok'
+    
+    response = make_response('ok')
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
     
 @api.route('/get_virtual_position/<v_id>', methods=['GET'])
 def get_virtual_person_position(v_id):
     global dic_virtual_people    
     if v_id in dic_virtual_people:
-        return dic_virtual_people[v_id][0]
-    return 'none'
+        resp = dic_virtual_people[v_id][0]
+    else:
+        resp = 'none'
+    
+    response = make_response(resp)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
     
 @api.route('/get_all_virtual/<v_id>', methods=['GET'])
 def get_all_virtual_people(v_id):
@@ -63,7 +77,11 @@ def get_all_virtual_people(v_id):
     #Add user 
     for i in range(len(ids)):
         ids[i] += '-' + dic_virtual_people[ids[i]][1]
-    return ','.join(ids)
+    resp = ','.join(ids)
+    
+    response = make_response(resp)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 ########################## OTHER FUNCTIONS ##########################

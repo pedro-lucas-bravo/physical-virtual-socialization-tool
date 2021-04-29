@@ -2,7 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class MainController : MonoBehaviour
@@ -70,6 +74,38 @@ public class MainController : MonoBehaviour
             PlayerPrefs.SetInt("user_type", (int)MainUserType);
         userTypeDropdown.value = (int)MainUserType;
 
+
+        ////UDP TEST
+        //UdpClient udpClient = new UdpClient(4100);
+        //try {
+        //    udpClient.Connect(ip, port);
+
+        //    // Sends a message to the host to which you have connected.
+        //    var sendBytes = Encoding.ASCII.GetBytes("TESSSS");
+
+        //    udpClient.Send(sendBytes, sendBytes.Length);
+
+        //    //IPEndPoint object will allow us to read datagrams sent from any source.
+        //    var RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
+
+        //    // Blocks until a message returns on this socket from a remote host.
+        //    //Byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
+        //    var  receiveResult = udpClient.ReceiveAsync();
+        //    receiveResult.
+        //    string returnData = Encoding.ASCII.GetString(receiveBytes);
+
+        //    // Uses the IPEndPoint object to determine which of these two hosts responded.
+        //    Debug.Log("This is the message you received " +
+        //                                 returnData.ToString());
+        //    Debug.Log("This message was sent from " +
+        //                                RemoteIpEndPoint.Address.ToString() +
+        //                                " on their port number " +
+        //                                RemoteIpEndPoint.Port.ToString());
+
+        //    udpClient.Close();
+        //} catch (Exception e) {
+        //    Debug.Log(e.ToString());
+        //}
     }
 
     private void Start() {
@@ -77,7 +113,7 @@ public class MainController : MonoBehaviour
     }
 
     void SetWebRequests() {
-        all_virtual_Request = new WrapperWebRequest("GetAllVirtualPeople", MainController.Instance.Url() + "/get_all_virtual/" + SystemInfo.deviceUniqueIdentifier, "GET");
+        all_virtual_Request_uri = Url() + "/get_all_virtual/" + SystemInfo.deviceUniqueIdentifier;
     }
 
     private void Update() {
@@ -94,49 +130,53 @@ public class MainController : MonoBehaviour
 
     public IEnumerator GetAllVirtualPeople() {
         requesting_ = true;
-        all_virtual_Request.SendAsync();
-        while (all_virtual_Request.Requesting) {
-            yield return null;
-        }
-        switch (all_virtual_Request.ErrorStatus) {
-            case WrapperWebRequest.ErroType.None:
-                if (all_virtual_Request.ResponseText == null) break;
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(all_virtual_Request_uri)) {
+            yield return webRequest.SendWebRequest();
+            switch (webRequest.result) {
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                    Debug.LogError("Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.ProtocolError:
+                    Debug.LogError("HTTP Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.Success:
+                    var responseText = webRequest.downloadHandler.text;
+                    if (responseText == null) break;
 
-                ParseVirtualPeople(all_virtual_Request.ResponseText, virtual_people_from_network_);
+                    ParseVirtualPeople(responseText, virtual_people_from_network_);
 
-                //Remove and destroy if needed
-                for (int i = 0; i < virtual_people_.Count; i++) {
-                    var virtualPerson = virtual_people_[i];
-                    if (!virtual_people_from_network_.Any(vp => vp.Id == virtualPerson.Id)) {
-                        virtual_people_.Remove(virtualPerson);
-                        Destroy(virtualPerson.gameObject);
-                        i--;
+                    //Remove and destroy if needed
+                    for (int i = 0; i < virtual_people_.Count; i++) {
+                        var virtualPerson = virtual_people_[i];
+                        if (!virtual_people_from_network_.Any(vp => vp.Id == virtualPerson.Id)) {
+                            virtual_people_.Remove(virtualPerson);
+                            Destroy(virtualPerson.gameObject);
+                            i--;
+                        }
                     }
-                }
 
-                if (virtual_people_from_network_.Count == 0)
-                    break;                
+                    if (virtual_people_from_network_.Count == 0)
+                        break;
 
-                //Add if someone new or update user
-                for (int i = 0; i < virtual_people_from_network_.Count; i++) {
-                    var foundVp = virtual_people_.Where(p => p.Id == virtual_people_from_network_[i].Id).FirstOrDefault();
-                    if (foundVp == null) {
-                        var newInstance = GameObject.Instantiate<VirtualPerson>(virtualPersonPrefab);
-                        newInstance.Id = virtual_people_from_network_[i].Id;
-                        newInstance.label.text = virtual_people_from_network_[i].UserName;
-                        newInstance.transform.parent = virtualPersonParent;
-                        newInstance.transform.localPosition = Vector3.zero;
-                        virtual_people_.Add(newInstance);
-                    } else {
-                        foundVp.label.text = virtual_people_from_network_[i].UserName;
+                    //Add if someone new or update user
+                    for (int i = 0; i < virtual_people_from_network_.Count; i++) {
+                        var foundVp = virtual_people_.Where(p => p.Id == virtual_people_from_network_[i].Id).FirstOrDefault();
+                        if (foundVp == null) {
+                            var newInstance = GameObject.Instantiate<VirtualPerson>(virtualPersonPrefab);
+                            newInstance.Id = virtual_people_from_network_[i].Id;
+                            newInstance.label.text = virtual_people_from_network_[i].UserName;
+                            newInstance.transform.parent = virtualPersonParent;
+                            newInstance.transform.localPosition = Vector3.zero;
+                            virtual_people_.Add(newInstance);
+                        } else {
+                            foundVp.label.text = virtual_people_from_network_[i].UserName;
+                        }
                     }
-                }
-
-                break;
-            default:
-                break;
+                    break;
+            }
         }
-        requesting_ = false;
+        requesting_ = false;        
     }
 
     #region Events
@@ -165,7 +205,7 @@ public class MainController : MonoBehaviour
 
     float timer_;
     bool requesting_;
-    WrapperWebRequest all_virtual_Request;
+    string all_virtual_Request_uri;
     List<VirtualPerson> virtual_people_;
     List<NetworkVitualPerson> virtual_people_from_network_;
 

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public class MainUser : MonoBehaviour
 {
@@ -26,7 +27,7 @@ public class MainUser : MonoBehaviour
     }
 
     private void OnConnect() {
-        position_Request = new WrapperWebRequest("SetVirtualPosition", MainController.Instance.Url() + "/set_virtual_position/" + SystemInfo.deviceUniqueIdentifier +"/"+ MainController.Instance.user, "GET");
+        position_Request_uri = MainController.Instance.Url() + "/set_virtual_position/" + SystemInfo.deviceUniqueIdentifier +"/"+ MainController.Instance.user;
     }
 
     private void OnChangeUser() {
@@ -73,17 +74,16 @@ public class MainUser : MonoBehaviour
 
     public IEnumerator SendPositionThroughNetwork() {
         sending_ = true;
-        position_Request.SetRequestHeader("p_x", transform.position.x + "");
-        position_Request.SetRequestHeader("p_y", transform.position.y + "");
-        position_Request.SetRequestHeader("p_z", transform.position.z + "");
-        position_Request.SendAsync();
-        while (position_Request.Requesting) {
-            yield return null;
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(position_Request_uri)) {
+            webRequest.SetRequestHeader("p_x", transform.position.x + "");
+            webRequest.SetRequestHeader("p_y", transform.position.y + "");
+            webRequest.SetRequestHeader("p_z", transform.position.z + "");
+            yield return webRequest.SendWebRequest();
         }
         sending_ = false;
     }
 
     bool grabbed_;
     bool sending_;
-    WrapperWebRequest position_Request;
+    string position_Request_uri;
 }
