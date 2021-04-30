@@ -32,6 +32,9 @@ public class MainController : MonoBehaviour
     public float periodForCheckingVirtuals = 1;
     public GameObject mainUser;
 
+    [Header("Balance")]
+    public float periodToCheckReceivePoke = 1;
+
     [Header("UI")]
     public InputField ipInput;
     public InputField userInput;
@@ -127,13 +130,50 @@ public class MainController : MonoBehaviour
 
     void SetWebRequests() {
         all_virtual_Request_uri = Url() + "/get_all_virtual/" + UniqueID;
+        ComposePokeRequestUri();
+    }
+
+    void ComposePokeRequestUri() {
+        string userId = UniqueID;
+        switch (MainUserType) {
+            case UserType.Physical1:
+                userId = 1 + "";
+                break;
+            case UserType.Physical2:
+                userId = 2 + "";
+                break;
+            default:
+                break;
+        }
+        set_poke_uri = Url() + "/set_poke/" + userId;
+        get_poke_uri = Url() + "/get_poke/" + userId;
     }
 
     private void Update() {
+
+        //Get all virtual people
         timer_ += Time.deltaTime;
         if (timer_ > periodForCheckingVirtuals && !requesting_) {
             StartCoroutine(GetAllVirtualPeople());
             timer_ = 0;
+        }
+
+        //Receive poke
+        if (!receivingPoke_)
+            StartCoroutine(ReceivePoke());
+
+        //Send Poke
+        //Mouse Interaction
+        if (Input.GetMouseButtonDown(0)) {
+            var mousePos = Input.mousePosition;
+            mousePos.z = -Camera.main.transform.position.z;
+            var ray = Camera.main.ScreenPointToRay(mousePos);
+            var hit = Physics2D.GetRayIntersection(ray);
+            if (hit.collider != null && hit.collider.CompareTag("RemotePlayer")) {
+                var pokeAction = hit.collider.GetComponent<PokeAction>();
+                pokeAction.SendPoke();
+                StartCoroutine(SendPoke(pokeAction.Target.Id));
+            }
         }
     }
 
@@ -192,7 +232,42 @@ public class MainController : MonoBehaviour
         requesting_ = false;        
     }
 
-#region Events
+    //PersonType = 0 : physical, 1 : virtual
+    public IEnumerator SendPoke(string remoteId) {
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(set_poke_uri)) {
+            webRequest.SetRequestHeader("remote_id", remoteId);
+            yield return webRequest.SendWebRequest();
+        }
+    }
+
+    public IEnumerator ReceivePoke() {
+        receivingPoke_ = true;
+        var startTime = Time.time;
+        while (Time.time - startTime < periodToCheckReceivePoke)
+            yield return null;
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(get_poke_uri)) {
+            yield return webRequest.SendWebRequest();
+            switch (webRequest.result) {
+                case UnityWebRequest.Result.ConnectionError:
+                case UnityWebRequest.Result.DataProcessingError:
+                    Debug.LogError("Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.ProtocolError:
+                    Debug.LogError("HTTP Error: " + webRequest.error);
+                    break;
+                case UnityWebRequest.Result.Success:
+                    var responseText = webRequest.downloadHandler.text;
+                    if (string.IsNullOrEmpty(responseText)) break;
+                    var target = Person.AllPeople.Where(p => p.Id == responseText).FirstOrDefault();
+                    if (target != null)
+                        target.GetComponent<PokeAction>().ReceivePoke();
+                    break;
+            }
+        }
+        receivingPoke_ = false;
+    }
+
+    #region Events
 
     public void Connect() {
         ip = ipInput.text.Trim();
@@ -213,6 +288,7 @@ public class MainController : MonoBehaviour
         MainUserType = (UserType)selection;
         mainUser.SetActive(selection == 0);
         PlayerPrefs.SetInt("user_type", (int)MainUserType);
+        ComposePokeRequestUri();
     }
 #endregion
 
@@ -221,8 +297,11 @@ public class MainController : MonoBehaviour
     string all_virtual_Request_uri;
     List<VirtualPerson> virtual_people_;
     List<NetworkVitualPerson> virtual_people_from_network_;
+    string set_poke_uri;
+    string get_poke_uri;
+    bool receivingPoke_;
 
-#region Utils
+    #region Utils
 
     //Assuming format x,y,z
     public static Vector3 ParsePosition(string strPos) {

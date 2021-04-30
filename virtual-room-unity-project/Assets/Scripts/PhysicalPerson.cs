@@ -2,18 +2,22 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PhysicalPerson : MonoBehaviour
+public class PhysicalPerson : Person
 {
     public int id;
     public float smoothDamp = 0.1f;    
 
     PositionRequest positionRequest_;
 
-    void Start() {
+    public override string Id { get => id + ""; set => id = int.Parse(value); }
+
+    protected override void Start() {
+        base.Start();
         positionRequest_ = new PositionRequest("GetPosition", "position", id + "", this, smoothDamp);
     }
 
-    private void OnDestroy() {
+    protected override void OnDestroy() {
+        base.OnDestroy();
         positionRequest_.OnDestroy();
     }
 

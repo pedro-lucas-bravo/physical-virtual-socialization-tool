@@ -83,6 +83,28 @@ def get_all_virtual_people(v_id):
     response = make_response(resp)
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
+    
+@api.route('/set_poke/<id>', methods=['GET'])
+@cross_origin()
+def set_poke(id):
+    global dic_poked_people   
+    remote_id   = request.headers.get('remote_id')
+    dic_poked_people[remote_id] = id
+    
+    response = make_response('ok')
+    return response
+    
+@api.route('/get_poke/<id>', methods=['GET'])
+def get_poke(id):
+    global dic_poked_people
+    resp = ''
+    if id in dic_poked_people:
+        resp = dic_poked_people[id]
+    dic_poked_people[id] = ''
+    
+    response = make_response(resp)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 ########################## OTHER FUNCTIONS ##########################
@@ -96,6 +118,7 @@ def flaskThread():
 pos_rb1 = np.array([0.0,0.0,0.0])
 pos_rb2 = np.array([0.0,0.0,0.0])
 dic_virtual_people = {}
+dic_poked_people = {}
 
 if __name__ == '__main__':
      
