@@ -41,14 +41,27 @@ public class MainController : MonoBehaviour
     public Action OnConnect { get; set; }
     public Action OnChangeUser { get; set; }
     public UserType MainUserType { get; private set; }
+    public string UniqueID { get; private set; }
 
     public static MainController Instance;
 
-    public void Awake() {
+    public void Awake() {        
         Instance = this;
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
         virtual_people_ = new List<VirtualPerson>();
         virtual_people_from_network_ = new List<NetworkVitualPerson>();
+
+        //Unique id
+        var uniqueId = PlayerPrefs.GetString("id");
+        if (string.IsNullOrEmpty(uniqueId) || uniqueId.Contains('-')) {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            uniqueId = System.Guid.NewGuid().ToString().Replace("-", "");
+#else
+            uniqueId = SystemInfo.deviceUniqueIdentifier.Replace("-", "");
+#endif
+            PlayerPrefs.SetString("id", uniqueId);
+        }
+        UniqueID = uniqueId;
 
         //Ip Info
         var ipFromPrefs = PlayerPrefs.GetString("ip");
@@ -113,7 +126,7 @@ public class MainController : MonoBehaviour
     }
 
     void SetWebRequests() {
-        all_virtual_Request_uri = Url() + "/get_all_virtual/" + SystemInfo.deviceUniqueIdentifier;
+        all_virtual_Request_uri = Url() + "/get_all_virtual/" + UniqueID;
     }
 
     private void Update() {
@@ -179,7 +192,7 @@ public class MainController : MonoBehaviour
         requesting_ = false;        
     }
 
-    #region Events
+#region Events
 
     public void Connect() {
         ip = ipInput.text.Trim();
@@ -201,7 +214,7 @@ public class MainController : MonoBehaviour
         mainUser.SetActive(selection == 0);
         PlayerPrefs.SetInt("user_type", (int)MainUserType);
     }
-    #endregion
+#endregion
 
     float timer_;
     bool requesting_;
@@ -209,7 +222,7 @@ public class MainController : MonoBehaviour
     List<VirtualPerson> virtual_people_;
     List<NetworkVitualPerson> virtual_people_from_network_;
 
-    #region Utils
+#region Utils
 
     //Assuming format x,y,z
     public static Vector3 ParsePosition(string strPos) {
@@ -230,5 +243,5 @@ public class MainController : MonoBehaviour
     }
 
 
-    #endregion
+#endregion
 }

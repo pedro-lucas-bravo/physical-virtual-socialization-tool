@@ -27,7 +27,7 @@ public class MainUser : MonoBehaviour
     }
 
     private void OnConnect() {
-        position_Request_uri = MainController.Instance.Url() + "/set_virtual_position/" + SystemInfo.deviceUniqueIdentifier +"/"+ MainController.Instance.user;
+        position_Request_uri = MainController.Instance.Url() + "/set_virtual_position/" + MainController.Instance.UniqueID +"/"+ MainController.Instance.user;
     }
 
     private void OnChangeUser() {

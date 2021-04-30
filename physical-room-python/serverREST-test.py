@@ -1,4 +1,5 @@
 from flask import Flask, json, request, make_response
+from flask_cors import CORS, cross_origin
 import threading
 import time
 import numpy as np
@@ -40,6 +41,7 @@ def set_physical_person_position(rb_id=0):
     return response
         
 @api.route('/set_virtual_position/<v_id>/<user_name>', methods=['GET'])
+@cross_origin()
 def set_virtual_person_position(v_id, user_name):
     global dic_virtual_people    
     p_x = request.headers.get('p_x')
@@ -48,7 +50,6 @@ def set_virtual_person_position(v_id, user_name):
     dic_virtual_people[v_id] = [p_x + "," + p_y + "," + p_z, user_name, time.time()]
     
     response = make_response('ok')
-    response.headers['Access-Control-Allow-Origin'] = '*'
     return response
     
 @api.route('/get_virtual_position/<v_id>', methods=['GET'])
